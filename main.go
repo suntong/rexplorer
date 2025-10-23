@@ -41,14 +41,14 @@ type searcherTemplate interface {
 
 func main() {
 	// --- Command Line Flag Parsing ---
-	service := flag.String("service", "github", "The search service to use (github, gitcode, gitee)")
+	service := flag.String("service", "github", "The search service to use (github, gitlab, bitbucket, gitcode, gitee)")
 	pages := flag.Int("pages", 5, "Maximum number of pages to fetch")
 	timeout := flag.Duration("timeout", 2*time.Minute, "Search timeout (e.g., 30s, 1m, 2m30s)")
 	flag.Parse()
 
 	args := flag.Args()
 	if len(args) < 1 {
-		log.Fatal("Usage: go run . -service=<github|gitcode|gitee> [options] <search_query>")
+		log.Fatal("Usage: go run . -service=<github|gitlab|bitbucket|gitcode|gitee> [options] <search_query>")
 	}
 	query := args[0]
 
@@ -64,6 +64,18 @@ func main() {
 			log.Println("Warning: GITHUB_TOKEN not set. Using unauthenticated requests (low rate limit).")
 		}
 		searcher = NewGitHubSearcher(token, client)
+	case "gitlab":
+		token = os.Getenv("GITLAB_TOKEN")
+		if token == "" {
+			log.Fatal("Error: GITLAB_TOKEN environment variable not set.")
+		}
+		searcher = NewGitLabSearcher(token, client)
+	case "bitbucket":
+		token = os.Getenv("BITBUCKET_TOKEN")
+		if token == "" {
+			log.Fatal("Error: BITBUCKET_TOKEN environment variable not set. Expected format is 'username:app_password'.")
+		}
+		searcher = NewBitbucketSearcher(token, client)
 	case "gitcode":
 		token = os.Getenv("GITCODE_TOKEN")
 		if token == "" {
@@ -77,7 +89,7 @@ func main() {
 		}
 		searcher = NewGiteeSearcher(token, client)
 	default:
-		log.Fatalf("Unknown service: %s. Must be one of github, gitcode, or gitee.", *service)
+		log.Fatalf("Unknown service: %s. Must be one of github, gitlab, bitbucket, gitcode, or gitee.", *service)
 	}
 
 	// --- Execution ---
