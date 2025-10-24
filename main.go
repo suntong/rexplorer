@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -12,15 +13,15 @@ import (
 )
 
 // PrintSummary prints repository summaries in a readable format
-func PrintSummary(summaries []RepositorySummary) {
+func PrintSummary(summaries []RepositorySummary, source string) {
 	if len(summaries) == 0 {
 		fmt.Println("No repositories found.")
 		return
 	}
 
-	fmt.Printf("Found %d repositories:\n\n", len(summaries))
+	fmt.Printf("Found %d repositories from %s:\n\n", len(summaries), source)
 	for i, summary := range summaries {
-		fmt.Printf("%d. %s (%s)\n", i+1, summary.FullName, summary.Source)
+		fmt.Printf("%d. %s\n", i+1, summary.FullName)
 		fmt.Printf("   URL: %s\n", summary.URL)
 		fmt.Printf("   Description: %s\n", summary.Description)
 		fmt.Printf("   Language: %s | Stars: %d | Forks: %d\n",
@@ -105,11 +106,17 @@ func main() {
 	}
 
 	// --- Results ---
+	// --- Results ---
 	fmt.Fprintln(os.Stderr, "\n=== KEY REPOSITORY INFORMATION ===")
-	PrintSummary(result.Items)
+	PrintSummary(result.Items, result.Source)
+
+	// Write JSON output
+	if err := writeJSONOutput(result); err != nil {
+		log.Printf("Warning: failed to write JSON output: %v", err)
+	}
 
 	fmt.Fprintf(os.Stderr, "\nSearch completed:\n")
-	fmt.Fprintf(os.Stderr, "- Service: %s\n", *service)
+	fmt.Fprintf(os.Stderr, "- Service: %s\n", result.Source)
 	fmt.Fprintf(os.Stderr, "- Query: %q\n", query)
 	if result.TotalCount == -1 {
 		fmt.Fprintf(os.Stderr, "- Total repositories available: Unknown\n")
@@ -117,4 +124,29 @@ func main() {
 		fmt.Fprintf(os.Stderr, "- Total repositories available: %d\n", result.TotalCount)
 	}
 	fmt.Fprintf(os.Stderr, "- Repositories retrieved: %d\n", len(result.Items))
+}
+
+// writeJSONOutput marshals the search result items to a JSON file.
+func writeJSONOutput(result *SearchResult) error {
+	if len(result.Items) == 0 {
+		return nil // Don't write empty files
+	}
+
+	// Sanitize the source for the filename
+	safeSource := strings.ReplaceAll(result.Source, " ", "")
+	filename := fmt.Sprintf("Out-%s.json", safeSource)
+
+	// Marshal the items with pretty printing
+	jsonData, err := json.MarshalIndent(result.Items, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal results to JSON: %w", err)
+	}
+
+	// Write the file
+	if err := os.WriteFile(filename, jsonData, 0644); err != nil {
+		return fmt.Errorf("failed to write JSON to file %s: %w", filename, err)
+	}
+
+	log.Printf("Successfully wrote %d results to %s", len(result.Items), filename)
+	return nil
 }

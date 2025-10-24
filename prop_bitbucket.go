@@ -44,16 +44,15 @@ type bitbucketLink struct {
 // BitbucketSearcher is the concrete implementation for searching Bitbucket.
 type BitbucketSearcher struct {
 	*BaseRepoSearcher
-	BaseURL string
 }
 
 // NewBitbucketSearcher creates a new searcher for Bitbucket.
 // The token should be in the format "username:app_password".
 func NewBitbucketSearcher(token string, client *http.Client) *BitbucketSearcher {
-	searcher := &BitbucketSearcher{
-		BaseURL: "https://api.bitbucket.org/2.0",
-	}
+	searcher := &BitbucketSearcher{}
 	base := NewBaseRepoSearcher(searcher, token, client)
+	base.Source = "Bitbucket"
+	base.BaseURL = "https://api.bitbucket.org/2.0"
 	searcher.BaseRepoSearcher = base
 	return searcher
 }
@@ -121,7 +120,6 @@ func (b *BitbucketSearcher) mapRepoToSummary(repo bitbucketRepository) Repositor
 
 	// The /repositories endpoint doesn't provide stars, forks, issues, etc.
 	return RepositorySummary{
-		Source:          "Bitbucket",
 		Name:            repo.Name,
 		FullName:        repo.FullName,
 		Description:     strings.TrimSpace(repo.Description),

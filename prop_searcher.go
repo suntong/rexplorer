@@ -15,7 +15,6 @@ import (
 // RepositorySummary contains the normalized, key information from any repo source.
 // This is the common data structure that all searchers must map their results to.
 type RepositorySummary struct {
-	Source          string   `json:"source"` // e.g., "GitHub", "GitCode", "Gitee"
 	Name            string   `json:"name"`
 	FullName        string   `json:"full_name"`
 	Description     string   `json:"description"`
@@ -35,6 +34,7 @@ type RepositorySummary struct {
 
 // SearchResult contains all collected repositories and metadata from a search.
 type SearchResult struct {
+	Source     string              `json:"source"`
 	Query      string              `json:"query"`
 	TotalCount int                 `json:"total_count"` // Total available, not just retrieved
 	Items      []RepositorySummary `json:"items"`
@@ -65,6 +65,8 @@ type BaseRepoSearcher struct {
 	implementation RepoSearcher
 	HTTPClient     *http.Client
 	Token          string
+	Source         string
+	BaseURL        string
 	// MaxRetries is the number of times to retry a request on failure
 	MaxRetries int
 	// RetryDelay is the initial delay between retries
@@ -154,6 +156,7 @@ func (s *BaseRepoSearcher) Search(ctx context.Context, query string, maxPages in
 	}
 
 	return &SearchResult{
+		Source:     s.Source,
 		Query:      query,
 		TotalCount: totalCount,
 		Items:      allRepos,

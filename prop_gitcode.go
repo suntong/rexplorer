@@ -40,17 +40,16 @@ type gitCodeLicense struct {
 // GitCodeSearcher is the concrete implementation for searching GitCode.
 type GitCodeSearcher struct {
 	*BaseRepoSearcher // Embed the base searcher
-	BaseURL           string
 }
 
 // NewGitCodeSearcher creates a new searcher for GitCode.
 func NewGitCodeSearcher(token string, client *http.Client) *GitCodeSearcher {
-	searcher := &GitCodeSearcher{
-		BaseURL: "https://api.gitcode.com/api/v5",
-	}
+	searcher := &GitCodeSearcher{}
 	// This is the key: we create the base searcher and pass *itself*
 	// as the implementation for the interface to call.
 	base := NewBaseRepoSearcher(searcher, token, client)
+	base.Source = "GitCode"
+	base.BaseURL = "https://api.gitcode.com/api/v5"
 	searcher.BaseRepoSearcher = base
 	return searcher
 }
@@ -117,7 +116,6 @@ func (g *GitCodeSearcher) mapRepoToSummary(repo gitCodeRepository) RepositorySum
 	}
 
 	return RepositorySummary{
-		Source:          "GitCode",
 		Name:            repo.Name,
 		FullName:        repo.FullName,
 		Description:     strings.TrimSpace(repo.Description),

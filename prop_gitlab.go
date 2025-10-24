@@ -38,15 +38,14 @@ type gitLabLicense struct {
 // GitLabSearcher is the concrete implementation for searching GitLab.
 type GitLabSearcher struct {
 	*BaseRepoSearcher
-	BaseURL string
 }
 
 // NewGitLabSearcher creates a new searcher for GitLab.
 func NewGitLabSearcher(token string, client *http.Client) *GitLabSearcher {
-	searcher := &GitLabSearcher{
-		BaseURL: "https://gitlab.com/api/v4",
-	}
+	searcher := &GitLabSearcher{}
 	base := NewBaseRepoSearcher(searcher, token, client)
+	base.Source = "GitLab"
+	base.BaseURL = "https://gitlab.com/api/v4"
 	searcher.BaseRepoSearcher = base
 	return searcher
 }
@@ -109,7 +108,6 @@ func (g *GitLabSearcher) mapRepoToSummary(repo gitLabRepository) RepositorySumma
 	}
 
 	return RepositorySummary{
-		Source:          "GitLab",
 		Name:            repo.Name,
 		FullName:        repo.PathWithNamespace,
 		Description:     strings.TrimSpace(repo.Description),

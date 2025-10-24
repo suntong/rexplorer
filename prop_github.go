@@ -46,15 +46,14 @@ type gitHubLicense struct {
 // GitHubSearcher is the concrete implementation for searching GitHub.
 type GitHubSearcher struct {
 	*BaseRepoSearcher
-	BaseURL string
 }
 
 // NewGitHubSearcher creates a new searcher for GitHub.
 func NewGitHubSearcher(token string, client *http.Client) *GitHubSearcher {
-	searcher := &GitHubSearcher{
-		BaseURL: "https://api.github.com",
-	}
+	searcher := &GitHubSearcher{}
 	base := NewBaseRepoSearcher(searcher, token, client)
+	base.Source = "GitHub"
+	base.BaseURL = "https://api.github.com"
 	searcher.BaseRepoSearcher = base
 	return searcher
 }
@@ -124,7 +123,6 @@ func (g *GitHubSearcher) mapRepoToSummary(repo gitHubRepository) RepositorySumma
 	}
 
 	return RepositorySummary{
-		Source:          "GitHub",
 		Name:            repo.Name,
 		FullName:        repo.FullName,
 		Description:     strings.TrimSpace(repo.Description),

@@ -33,3 +33,4 @@ go.work.sum
 *~
 
 rexplorer
+Out-*.json

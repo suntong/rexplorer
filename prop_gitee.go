@@ -36,16 +36,15 @@ type giteeRepository struct {
 // GiteeSearcher is the concrete implementation for searching Gitee.
 type GiteeSearcher struct {
 	*BaseRepoSearcher
-	BaseURL string
 }
 
 // NewGiteeSearcher creates a new searcher for Gitee.
 // Note: Gitee recommends using an access_token for auth.
 func NewGiteeSearcher(token string, client *http.Client) *GiteeSearcher {
-	searcher := &GiteeSearcher{
-		BaseURL: "https://gitee.com/api/v5",
-	}
+	searcher := &GiteeSearcher{}
 	base := NewBaseRepoSearcher(searcher, token, client)
+	base.Source = "Gitee"
+	base.BaseURL = "https://gitee.com/api/v5"
 	searcher.BaseRepoSearcher = base
 	return searcher
 }
@@ -117,7 +116,6 @@ func (g *GiteeSearcher) mapRepoToSummary(repo giteeRepository) RepositorySummary
 	}
 
 	return RepositorySummary{
-		Source:          "Gitee",
 		Name:            repo.Name,
 		FullName:        repo.FullName,
 		Description:     strings.TrimSpace(repo.Description),
