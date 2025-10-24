@@ -53,12 +53,11 @@ func NewGitLabSearcher(token string, client *http.Client) *GitLabSearcher {
 
 // buildSearchURL implements the RepoSearcher interface for GitLab.
 func (g *GitLabSearcher) buildSearchURL(query string, page, perPage int) (string, error) {
-	u, err := url.Parse(g.BaseURL + "/search")
+	u, err := url.Parse(g.BaseURL + "/projects")
 	if err != nil {
 		return "", fmt.Errorf("failed to parse base URL: %w", err)
 	}
 	q := u.Query()
-	q.Set("scope", "projects")
 	q.Set("search", query)
 	q.Set("page", fmt.Sprintf("%d", page))
 	q.Set("per_page", fmt.Sprintf("%d", perPage))
@@ -74,8 +73,9 @@ func (g *GitLabSearcher) buildSearchRequest(ctx context.Context, url string) (*h
 	}
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("User-Agent", "go-repo-searcher/1.0")
+	// GitLab uses PRIVATE-TOKEN header for authentication, but it's not required for public repos.
+	// The token is now optional.
 	if g.Token != "" {
-		// GitLab uses PRIVATE-TOKEN header for authentication
 		req.Header.Set("PRIVATE-TOKEN", g.Token)
 	}
 	return req, nil
